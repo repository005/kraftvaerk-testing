@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { sortArrayByValue } from '../../helpers/utils';
 import { ReactComponent as SearchIcon } from '../../assets/images/search.svg';
 import { ReactComponent as CloseIcon } from '../../assets/images/close.svg';
@@ -14,20 +14,20 @@ const Search = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [clickedOutside, setClickedOutside] = useState(false);
-  
+
   useEffect(() => {
     const clickOut = (e) => {
       if (!e.target.closest(`.${styles.wrapper}`)) {
         setClickedOutside(true);
       }
-    }
-    
-    window.addEventListener('mousedown', clickOut)
+    };
+
+    window.addEventListener('mousedown', clickOut);
 
     return () => {
-      window.removeEventListener('mousedown', clickOut)
-    }
-  }, [clickedOutside])
+      window.removeEventListener('mousedown', clickOut);
+    };
+  }, [clickedOutside]);
 
   async function loadList() {
     setLoading(true);
@@ -61,15 +61,20 @@ const Search = () => {
   }
 
   const filterList = (key) => {
-    const newList = list.filter(item => item.name.toLowerCase().includes(key.toLowerCase()));
+    const newList = list.filter((item) =>
+      item.name.toLowerCase().includes(key.toLowerCase())
+    );
     setFilteredList(newList);
-  }
+  };
+
+  const activeDropdown = useMemo(() => {
+    return !!filteredList.length && searchInput.length > 1 && !clickedOutside;
+  }, [filteredList, searchInput, clickedOutside]);
 
   return (
     <div className={styles.navbar}>
       <div className={styles.wrapper}>
         <label className={styles.label}>
-          
           <input
             className={styles.input}
             placeholder="Type anything..."
@@ -100,8 +105,10 @@ const Search = () => {
           {loading && <Loader />}
         </label>
 
-        <div className={styles['results-wrapper']}>
-          {!!filteredList.length && searchInput.length > 1 && !clickedOutside && <Results data={filteredList} />}
+        <div
+          className={styles['results-wrapper']}
+        >
+          {activeDropdown && <Results data={filteredList} />}
           {errorMessage && <div>{errorMessage}</div>}
         </div>
       </div>
