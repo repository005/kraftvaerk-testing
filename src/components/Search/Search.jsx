@@ -29,7 +29,7 @@ const Search = () => {
     };
   }, [clickedOutside]);
 
-  async function loadList() {
+  async function loadList(key) {
     setLoading(true);
 
     try {
@@ -49,22 +49,26 @@ const Search = () => {
 
       setList(modifiedList);
       setLoading(false);
+      filterList(key, modifiedList);
 
       if (errorMessage) {
         setErrorMessage(null);
       }
-      filterList(searchInput);
     } catch (err) {
       setLoading(false);
       setErrorMessage('Something went wrong');
     }
   }
 
-  const filterList = (key) => {
-    const newList = list.filter((item) =>
-      item.name.toLowerCase().includes(key.toLowerCase())
+  const filterList = (key, initialList = null) => {
+    let listForFiltering = initialList || list;
+    let newList = listForFiltering.filter((item) =>
+    item.name.toLowerCase().includes(key.toLowerCase())
+  );
+
+    setFilteredList(
+      newList
     );
-    setFilteredList(newList);
   };
 
   const activeDropdown = useMemo(() => {
@@ -83,11 +87,12 @@ const Search = () => {
             onFocus={() => setClickedOutside(false)}
             onChange={(e) => {
               e.preventDefault();
-              if (!list.length) {
-                loadList();
-              }
-              filterList(e.target.value);
               setSearchInput(e.target.value);
+              if (!list.length) {
+                loadList(e.target.value);
+              } else if (e.target.value.length > 1) {
+                filterList(e.target.value);
+              }
             }}
           />
 
@@ -105,9 +110,7 @@ const Search = () => {
           {loading && <Loader />}
         </label>
 
-        <div
-          className={styles['results-wrapper']}
-        >
+        <div className={styles['results-wrapper']}>
           {activeDropdown && <Results data={filteredList} />}
           {errorMessage && <div>{errorMessage}</div>}
         </div>
